@@ -53,5 +53,8 @@
       }
     }
   },
-  "defaultProject": "blackrooster"
+  "defaultProject": "blackrooster",
+  "cli": {
+    "analytics": "d0fcfb45-ee96-40ed-bb02-c175d1a080ca"
+  }
 }
