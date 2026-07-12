@@ -1,0 +1,420 @@
+<main id="main-content" class="restaurant-page" role="main">
+  <header class="hero" aria-labelledby="hero-title">
+    <div class="hero__content">
+      <span class="hero__eyebrow">{{ restaurant.category }}</span>
+      <h1 id="hero-title">{{ restaurant.name }}</h1>
+      <p class="hero__tagline">{{ restaurant.tagline }}</p>
+      <p class="hero__description">{{ restaurant.description }}</p>
+
+      <div class="hero__badges" role="list">
+        <span class="badge" role="listitem">⭐ {{ restaurant.rating }} en Google Maps</span>
+        <span class="badge" role="listitem">{{ restaurant.hours }}</span>
+        <span class="badge" role="listitem">{{ restaurant.note }}</span>
+      </div>
+
+      <div class="hero__actions">
+        <a
+          class="button button--primary"
+          [href]="restaurant.whatsappLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Abrir WhatsApp para hacer pedido"
+        >
+          Pedir por WhatsApp
+        </a>
+        <a
+          class="button button--secondary"
+          [href]="restaurant.mapsLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ver ubicación en Google Maps"
+        >
+          Ver ubicación
+        </a>
+      </div>
+    </div>
+
+    <div class="hero__gallery">
+      <img
+        class="hero__main-image"
+        [src]="gallery[0]"
+        [alt]="'Foto principal de ' + restaurant.name"
+        fetchpriority="high"
+        width="1200"
+        height="675"
+      />
+      <div class="hero__grid">
+        @for (photo of gallery.slice(1); track photo) {
+          <img
+            [src]="photo"
+            [alt]="'Galería de ' + restaurant.name"
+            loading="lazy"
+            width="400"
+            height="300"
+          />
+        }
+      </div>
+    </div>
+  </header>
+
+  <section class="info-strip" aria-labelledby="info-strip-heading">
+    <h2 id="info-strip-heading" class="visually-hidden">Información de contacto y ubicación</h2>
+    <article class="info-card">
+      <h3>Ubicación</h3>
+      <p>{{ restaurant.address }}</p>
+      <a [href]="restaurant.mapsLink" target="_blank" rel="noopener noreferrer" aria-label="Abrir dirección en Google Maps">
+        Abrir en Google Maps
+      </a>
+    </article>
+
+    <article class="info-card">
+      <h3>Contacto</h3>
+      <p>{{ restaurant.phoneDisplay }}</p>
+      <a [href]="'tel:+' + restaurant.phoneRaw" aria-label="Llamar al restaurante">
+        Llamar ahora
+      </a>
+    </article>
+
+    <article class="info-card">
+      <h3>Redes sociales</h3>
+      <p>Sigue sus novedades y promociones.</p>
+      <a [href]="restaurant.facebookLink" target="_blank" rel="noopener noreferrer" aria-label="Seguir en Facebook">
+        Facebook oficial
+      </a>
+    </article>
+  </section>
+
+  <section class="section" aria-labelledby="featured-heading">
+    <div class="section__heading">
+      <span class="section__eyebrow">Especialidades</span>
+      <h2 id="featured-heading">Productos destacados</h2>
+      <p>Una selección inicial del menú para mostrar precios, fotos y opciones populares.</p>
+    </div>
+
+    <div class="featured-grid" role="list">
+      @for (item of featuredItems; track trackByItem($index, item)) {
+        <article class="menu-card" role="listitem">
+          <img
+            [src]="item.image"
+            [alt]="item.name"
+            loading="lazy"
+            width="400"
+            height="240"
+          />
+          <div class="menu-card__body">
+            <div class="menu-card__meta">
+              <span>{{ item.category }}</span>
+              <strong>{{ formatPrice(item.price) }}</strong>
+            </div>
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="section section--dark" aria-labelledby="menu-heading">
+    <div class="section__heading">
+      <span class="section__eyebrow">Menú completo</span>
+      <h2 id="menu-heading">Explora por categorías</h2>
+      <p>El cliente puede consultar el menú organizado por tipo de producto.</p>
+    </div>
+
+    <div class="menu-groups">
+      @for (group of groupedMenu; track trackByCategory($index, group)) {
+        <div class="menu-group">
+          <h3>{{ group.category }}</h3>
+          <div class="menu-group__items">
+            @for (item of group.items; track trackByItem($index, item)) {
+              <article class="menu-line">
+                <img
+                  [src]="item.image"
+                  [alt]="item.name"
+                  loading="lazy"
+                  width="92"
+                  height="92"
+                />
+                <div>
+                  <header>
+                    <h4>{{ item.name }}</h4>
+                    <span>{{ formatPrice(item.price) }}</span>
+                  </header>
+                  <p>{{ item.description }}</p>
+                </div>
+              </article>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  @if (isLoggedIn()) {
+    <section class="section admin-section" id="admin-section" aria-labelledby="admin-heading">
+      <div class="section__heading">
+        <span class="section__eyebrow">Administración</span>
+        <h2 id="admin-heading">
+          {{ editingId() ? 'Editar producto' : 'Agregar producto al menú' }}
+        </h2>
+        <p>Los productos se guardan en este dispositivo (localStorage).</p>
+      </div>
+
+      @if (!usingDefaultMenu()) {
+        <div class="admin-items-list" role="list" aria-label="Productos guardados">
+          @for (item of menuItems(); track trackByItem($index, item)) {
+            <div class="admin-item-row" role="listitem">
+              <img [src]="item.image" [alt]="item.name" width="56" height="56" loading="lazy" />
+              <span class="admin-item-name">{{ item.name }}</span>
+              <span class="admin-item-cat">{{ item.category }}</span>
+              <strong class="admin-item-price">{{ formatPrice(item.price) }}</strong>
+              <div class="admin-item-actions">
+                <button class="button button--secondary admin-btn-sm"
+                        (click)="openEditForm(item)"
+                        [attr.aria-label]="'Editar ' + item.name">
+                  Editar
+                </button>
+                <button class="button admin-btn-sm admin-btn-danger"
+                        (click)="deleteMenuItem(item)"
+                        [attr.aria-label]="'Eliminar ' + item.name">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="admin-note">
+          Menú de muestra activo. Agrega el primer producto para empezar a personalizar.
+        </p>
+      }
+
+      <form class="admin-form" (ngSubmit)="addMenuItem()" aria-label="Formulario de producto">
+        @if (addProductError()) {
+          <p class="form-error" role="alert">{{ addProductError() }}</p>
+        }
+
+        <label for="product-name">
+          Nombre del producto
+          <input
+            id="product-name"
+            type="text"
+            name="name"
+            [(ngModel)]="newItem.name"
+            placeholder="Ej. Nachos especiales"
+            autocomplete="off"
+          />
+        </label>
+
+        <label for="product-description">
+          Descripción
+          <textarea
+            id="product-description"
+            name="description"
+            [(ngModel)]="newItem.description"
+            rows="3"
+            placeholder="Describe ingredientes o presentación"
+          ></textarea>
+        </label>
+
+        <div class="admin-form__row">
+          <label for="product-price">
+            Precio
+            <input
+              id="product-price"
+              type="number"
+              name="price"
+              [(ngModel)]="newItem.price"
+              min="1"
+              step="1"
+              placeholder="120"
+              inputmode="numeric"
+            />
+          </label>
+
+          <label for="product-category">
+            Categoría
+            <select id="product-category" name="category" [(ngModel)]="newItem.category">
+              @for (category of categories; track category) {
+                <option [value]="category">{{ category }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <label for="product-image-url">
+          URL de la imagen
+          <input
+            id="product-image-url"
+            type="url"
+            name="image"
+            [(ngModel)]="newItem.image"
+            placeholder="https://ejemplo.com/imagen.jpg"
+            autocomplete="off"
+          />
+        </label>
+
+        <div class="admin-image-or" aria-hidden="true"><span>— o sube desde tu dispositivo —</span></div>
+
+        <div class="admin-image-upload-wrapper">
+          <label for="product-image-file" class="admin-image-upload-label">
+            📁 Seleccionar imagen
+            <input
+              id="product-image-file"
+              type="file"
+              accept="image/*"
+              (change)="onImageFileChange($event)"
+            />
+          </label>
+          @if (imagePreview()) {
+            <div class="admin-image-preview">
+              <img [src]="imagePreview()!" alt="Vista previa de la imagen" width="96" height="96" />
+              <button
+                type="button"
+                class="admin-btn-sm admin-btn-danger"
+                (click)="imagePreview.set(null)"
+                aria-label="Quitar imagen seleccionada"
+              >
+                Quitar
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="admin-form-actions">
+          @if (editingId()) {
+            <button type="button" class="button button--secondary" (click)="cancelEdit()">
+              Cancelar
+            </button>
+          }
+          <button class="button button--primary" type="submit">
+            {{ editingId() ? 'Guardar cambios' : 'Agregar al menú' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="section photo-gallery" aria-labelledby="gallery-heading">
+    <div class="section__heading">
+      <span class="section__eyebrow">Galería</span>
+      <h2 id="gallery-heading">Nuestro espacio</h2>
+      <p>Fotografías del local, el ambiente y lo que nos hace únicos.</p>
+    </div>
+
+    @if (bannerPhotos().length > 0) {
+      <div class="photo-gallery__grid" role="list">
+        @for (photo of bannerPhotos(); track photo; let i = $index) {
+          <div class="photo-gallery__item" role="listitem">
+            <img [src]="photo" [alt]="'Foto del restaurante ' + (i + 1)" loading="lazy" />
+            @if (isLoggedIn()) {
+              <button
+                type="button"
+                class="photo-gallery__delete"
+                (click)="deleteBannerPhoto(i)"
+                aria-label="Eliminar foto"
+              >✕</button>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="admin-note">Aún no hay fotos en la galería.</p>
+    }
+
+    @if (isLoggedIn()) {
+      <div class="photo-gallery__admin">
+        <div class="admin-image-upload-wrapper">
+          <label for="banner-photo-file" class="admin-image-upload-label">
+            📷 Agregar foto al banner
+            <input
+              id="banner-photo-file"
+              type="file"
+              accept="image/*"
+              (change)="onBannerFileChange($event)"
+            />
+          </label>
+          @if (bannerPhotoPreview()) {
+            <div class="admin-image-preview">
+              <img [src]="bannerPhotoPreview()!" alt="Vista previa" width="96" height="96" />
+              <button
+                type="button"
+                class="button button--primary admin-btn-sm"
+                (click)="addBannerPhoto()"
+              >
+                Publicar foto
+              </button>
+              <button
+                type="button"
+                class="admin-btn-sm admin-btn-danger"
+                (click)="bannerPhotoPreview.set(null)"
+                aria-label="Cancelar"
+              >
+                Cancelar
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <section class="section contact-banner" aria-labelledby="cta-heading">
+    <div>
+      <span class="section__eyebrow">Haz tu pedido</span>
+      <h2 id="cta-heading">Ordena directo con {{ restaurant.name }}</h2>
+      <p>Contacta por WhatsApp para consultar disponibilidad, promociones y tiempo de entrega.</p>
+    </div>
+    <a
+      class="button button--primary"
+      [href]="restaurant.whatsappLink"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Abrir WhatsApp para ordenar"
+    >
+      Ir a WhatsApp
+    </a>
+  </section>
+
+  <footer class="admin-toggle-footer">
+    @if (showAuthForm()) {
+      <div class="auth-panel">
+        <h3 id="auth-heading">Acceso administrador</h3>
+        @if (authError()) {
+          <p class="form-error" role="alert">{{ authError() }}</p>
+        }
+        <form (ngSubmit)="submitAuth()" class="auth-form">
+          <label for="auth-password">Contraseña</label>
+          <input
+            id="auth-password"
+            type="password"
+            [(ngModel)]="authPassword"
+            name="authPassword"
+            placeholder="••••••••"
+            required
+          />
+          <div class="auth-form-actions">
+            <button type="submit" class="button button--primary" [disabled]="authLoading()">
+              {{ authLoading() ? 'Espera…' : 'Entrar' }}
+            </button>
+            <button type="button" class="admin-toggle-btn" (click)="toggleAuthForm()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    } @else if (isLoggedIn()) {
+      <button type="button" class="admin-toggle-btn" (click)="signOut()">
+        Cerrar sesión
+      </button>
+    } @else {
+      <button
+        type="button"
+        class="admin-toggle-btn"
+        (click)="toggleAuthForm()"
+        [attr.aria-expanded]="showAuthForm()"
+        aria-label="Acceso administrador"
+      >
+        Acceso administrador
+      </button>
+    }
+  </footer>
+</main>
