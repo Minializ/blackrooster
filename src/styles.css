@@ -5,14 +5,23 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #3b2410;
+}
+
 .skip-link {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 100;
   padding: 0.75rem 1.25rem;
-  background: var(--color-accent, #ff8a1d);
-  color: var(--color-bg-dark, #1b120d);
+  background: #c8972b;
+  color: #1b120d;
   font-weight: 700;
   text-decoration: none;
   border-radius: 0 0 0.5rem 0;
@@ -22,11 +31,14 @@
 
 .skip-link:focus {
   transform: translateY(0);
-  outline: 3px solid #fff;
+  outline: 3px solid #F5F5DC;
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .skip-link {
     transition: none;
   }

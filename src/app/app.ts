@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal, computed, afterNextRender, inject } from '@angular/core';
+import { Component, signal, computed, afterNextRender, inject, AfterViewInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from './core/auth.service';
 import { ProductsService } from './core/products.service';
@@ -79,9 +80,10 @@ function productToItem(p: ProductRow): MenuItem {
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class App implements AfterViewInit {
   private readonly auth = inject(AuthService);
   private readonly productsService = inject(ProductsService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly title = signal('Gallo Negro');
   readonly categories: MenuCategory[] = ['Especialidades', 'Bebidas', 'Snacks', 'Postres'];
@@ -120,7 +122,13 @@ export class App {
         const raw = localStorage.getItem(this.BANNER_KEY);
         if (raw) this.bannerPhotos.set(JSON.parse(raw) as string[]);
       } catch { /* datos corruptos — ignorar */ }
+      this.startSlider();
     });
+  }
+
+  ngAfterViewInit(): void {
+    // PayPal donate button — si tienes un hosted_button_id real, descomenta el bloque de abajo.
+    // Por ahora se usa un enlace estático como fallback.
   }
 
   readonly restaurant: RestaurantInfo = {
@@ -137,15 +145,43 @@ export class App {
     hours: 'Abierto de 1:00 p.m. a 11:00 p.m.',
     rating: '5.0',
     category: 'Snack bar',
-    note: 'Amigable con LGBTQ+'
+    note: ''
   };
 
   gallery: string[] = [
-    'https://lh3.googleusercontent.com/gps-cs-s/AHVAwep5lpzXTF3o4-tAX74KSlihFG8C2P6eAYXcIGXAkNhI55cvoBXhvtRdEGXuer3euY5bjw_gLJb5DJHQJr0VLriaCXXxcKSR-cHdq45CmlUPykDKtmMmq3FN61Tx3Vj-K7F2qD2tsHUQZRsj=w1200-h675-k-no',
-    'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1541544181051-e46607ed6c55?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80'
+    'gallery/restaurante.jpg',
+    'gallery/comida.jpg',
+    'gallery/comida2.jpg',
+    'gallery/restaurante2.jpg',
+    'gallery/restaurante3.jpg',
+    'gallery/image_443c2c02.png',
+    'gallery/image_608382a8.png',
+    'gallery/image_82a176dc.png',
+    'gallery/image_fd2eb820.png'
   ];
+
+  // ── Slider ────────────────────────────────────────────────────────────────
+  readonly currentSlide = signal(0);
+  private slideInterval: ReturnType<typeof setInterval> | null = null;
+
+  // ── Slider methods ────────────────────────────────────────────────────────
+  startSlider(): void {
+    this.slideInterval = setInterval(() => this.nextSlide(), 4000);
+  }
+
+  nextSlide(): void {
+    this.currentSlide.update(i => (i + 1) % this.gallery.length);
+  }
+
+  prevSlide(): void {
+    this.currentSlide.update(i => (i - 1 + this.gallery.length) % this.gallery.length);
+  }
+
+  goToSlide(index: number): void {
+    this.currentSlide.set(index);
+    if (this.slideInterval) clearInterval(this.slideInterval);
+    this.startSlider();
+  }
 
   get featuredItems(): MenuItem[] {
     return this.menuItems().slice(0, 3);
